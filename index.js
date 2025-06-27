@@ -27,7 +27,7 @@ async function initDB() {
 }
 
 app.command('/shellpheus-subscribe', async ({ command, ack, respond }) => {
-    await ack(); // Immediate Slack ack
+    await ack();
 
     const pid = command.text.trim();
     if (!pid) {
@@ -101,10 +101,11 @@ async function fetchDevlogs(pid) {
     const $ = cheerio.load(html);
 
     return $('[data-controller~="devlog-card"]').map((i, el) => {
-        const slug = $(el).attr('id')?.replace('devlog_', '') || '';
-        const title = $(el).find('span.text-base, span.text-lg, span.text-xl').first().text().trim();
-        const date = $(el).find('time').attr('datetime') || '';
-        return { slug, title, date };
+        const id = $(el).attr('id')?.replace('devlog_', '') || '';
+        const slug = id ? `/devlogs/${id}` : '';
+        const content = $(el).find('[data-devlog-card-target="content"]').text().trim();
+        const date = $(el).find('.text-[#B89576] span').last().text().trim();
+        return {slug, title, date};
     }).get();
 }
 
