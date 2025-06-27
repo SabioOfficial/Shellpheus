@@ -87,10 +87,11 @@ async function fetchDevlogs(pid) {
 
     const html = await res.text();
     const $ = cheerio.load(html);
-    return $('.devlog-card').map((i, el) => {
-        const slug = $(el).find('a.devlog-link').attr('href');
-        const title = $(el).find('h3').text().trim();
-        const date = $(el).find('time').attr('datetime');
+
+    return $('[data-controller~="devlog-card"]').map((i, el) => {
+        const slug = $(el).attr('id')?.replace('devlog_', '') || '';
+        const title = $(el).find('span.text-base, span.text-lg, span.text-xl').first().text().trim();
+        const date = $(el).find('time').attr('datetime') || '';
         return { slug, title, date };
     }).get();
 }
