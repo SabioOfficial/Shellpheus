@@ -27,7 +27,7 @@ async function initDB() {
 }
 
 app.command('/shellpheus-subscribe', async ({ command, ack, respond }) => {
-    await ack();
+    await ack(); // Immediate Slack ack
 
     const pid = command.text.trim();
     if (!pid) {
@@ -46,11 +46,17 @@ app.command('/shellpheus-subscribe', async ({ command, ack, respond }) => {
         await respond(`✅ Subscribed to project ${pid}!`);
 
         const devlogs = await fetchDevlogs(pid);
+        console.log('Fetched devlogs:', devlogs);
         if (devlogs.length) {
             const latest = devlogs[0];
             await app.client.chat.postMessage({
                 channel: command.channel_id,
                 text: `📢 Latest devlog for project *${pid}*: <https://summer.hackclub.com${latest.slug}|${latest.title}> (${latest.date})`
+            });
+        } else {
+            await app.client.chat.postMessage({
+                channel: command.channel_id,
+                text: `No devlogs found for project ${pid}.`
             });
         }
     } catch (err) {
