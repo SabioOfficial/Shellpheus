@@ -1,16 +1,13 @@
 import 'dotenv/config';
-
 import pkgSlackBolt from '@slack/bolt';
 const { App } = pkgSlackBolt;
-
-import pkgNodeFetch from 'node-fetch';
-const fetch = pkgNodeFetch;
-
-import pkgCheerio from 'cheerio';
-const cheerio = pkgCheerio;
-
+import fetch from 'node-fetch';
 import mongoose from 'mongoose';
 import { Subscription, LastDevlog } from './models.js';
+
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const cheerio = require('cheerio');
 
 async function initDB() {
     if (mongoose.connection.readyState === 0) {
