@@ -9,23 +9,19 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const cheerio = require('cheerio');
 
-const app = new App({
-    token: process.env.SLACK_BOT_TOKEN,
-    receiver,
-    signingSecret: process.env.SLACK_SIGNING_SECRET,
-    socketMode: false
-});
-
 const receiver = new ExpressReceiver({ 
     signingSecret: process.env.SLACK_SIGNING_SECRET,
     endpoints: '/slack/commands'
 });
 
+const app = new App({
+    token: process.env.SLACK_BOT_TOKEN,
+    receiver,
+});
+
 async function initDB() {
     if (mongoose.connection.readyState === 0) {
-        await mongoose.connect(process.env.MONGO_URI, {
-            // nothing LMFAO 💤
-        });
+        await mongoose.connect(process.env.MONGO_URI, {});
         console.log('✅ MongoDB connected');
     }
 }
