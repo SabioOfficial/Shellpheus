@@ -99,6 +99,9 @@ async function fetchDevlogs(pid) {
 
     const html = await res.text();
     const $ = cheerio.load(html);
+    console.log(html);
+
+    console.log('Devlog card count:', $('[data-controller~="devlog-card"]').length);
 
     return $('[data-controller~="devlog-card"]').map((i, el) => {
         const id = $(el).attr('id')?.replace('devlog_', '') || '';
