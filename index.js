@@ -1,21 +1,14 @@
-require('dotenv').config();
-const {App} = require('@slack/bolt');
-const fetch = require('node-fetch');
-const cheerio = require('cheerio');
-const mongoose = require('mongoose');
-const {Subscription, LastDevlog} = require('./models');
-const path = require('path');
-
-const app = new App({
-    token: process.env.SLACK_BOT_TOKEN,
-    signingSecret: process.env.SLACK_SIGNING_SECRET
-});
+import 'dotenv/config';
+import { App } from '@slack/bolt';
+import fetch from 'node-fetch';
+import cheerio from 'cheerio';
+import mongoose from 'mongoose';
+import { Subscription, LastDevlog } from './models.js';
 
 async function initDB() {
     if (mongoose.connection.readyState === 0) {
         await mongoose.connect(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
+            // nothing LMFAO 💤
         });
         console.log('✅ MongoDB connected');
     }
