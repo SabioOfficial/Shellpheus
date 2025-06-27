@@ -1,8 +1,14 @@
 import 'dotenv/config';
-import pkg from '@slack/bolt';
-const { App } = pkg;
-import fetch from 'node-fetch';
-import cheerio from 'cheerio';
+
+import pkgSlackBolt from '@slack/bolt';
+const { App } = pkgSlackBolt;
+
+import pkgNodeFetch from 'node-fetch';
+const fetch = pkgNodeFetch;
+
+import pkgCheerio from 'cheerio';
+const cheerio = pkgCheerio;
+
 import mongoose from 'mongoose';
 import { Subscription, LastDevlog } from './models.js';
 
