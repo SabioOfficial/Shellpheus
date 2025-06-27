@@ -61,14 +61,20 @@ app.command('/shellpheus-subscribe', async ({ command, ack, respond }) => {
 
 app.command('/shellpheus-unsubscribe', async ({command, ack, respond}) => {
     await ack();
+
     const pid = command.text.trim();
 
-    await initDB();
-    const result = await Subscription.deleteOne({projectId: pid, channelId: command.channel_id});
-    if (result.deletedCount) {
-        respond(`🗑️ Unsubscribed from project ${pid}.`);
-    } else {
-        respond(`You weren't subscribed to project ${pid}.`);
+    try {
+        await initDB();
+        const result = await Subscription.deleteOne({projectId: pid, channelId: command.channel_id});
+        if (result.deletedCount) {
+            await respond(`🗑️ Unsubscribed from project ${pid}.`);
+        } else {
+            await respond(`You weren't subscribed to project ${pid}.`);
+        }
+    } catch (e) {
+        await respond("❌ Something went wrong while unsubscribing.");
+        console.error(e);
     }
 });
 
