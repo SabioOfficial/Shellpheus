@@ -1,5 +1,6 @@
 import 'dotenv/config';
-import { App } from '@slack/bolt';
+import pkg from '@slack/bolt';
+const { App } = pkg;
 import fetch from 'node-fetch';
 import mongoose from 'mongoose';
 import { Subscription, LastDevlog } from './models.js';
