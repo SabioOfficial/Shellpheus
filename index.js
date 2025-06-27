@@ -88,7 +88,7 @@ async function fetchDevlogs(pid) {
     const res = await fetch(`https://summer.hackclub.com/projects/${pid}`, {
         headers: {
             'Cookie': process.env.SOM_COOKIE,
-            'User-Agent': 'ShellpheusBot/1.0'
+            'User-Agent': 'Mozilla/5.0',
         }
     });
 
