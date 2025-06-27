@@ -1,5 +1,6 @@
 import 'dotenv/config';
-import { App } from '@slack/bolt';
+import pkg from '@slack/bolt';
+const { App } = pkg;
 import fetch from 'node-fetch';
 import cheerio from 'cheerio';
 import mongoose from 'mongoose';
@@ -14,7 +15,7 @@ async function initDB() {
     }
 }
 
-app.command('/shellpheus-subscribe', async ({command, ack, respond}) => {
+App.command('/shellpheus-subscribe', async ({command, ack, respond}) => {
     await ack();
     const pid = command.text.trim();
     if (!pid) return respond(`Please provide a project ID, e.g. \`/shellpheus-subscribe 2054\`.`);
@@ -28,7 +29,7 @@ app.command('/shellpheus-subscribe', async ({command, ack, respond}) => {
     respond(`✅ Subscribed to project ${pid}!`);
 });
 
-app.command('/shellpheus-unsubscribe', async ({command, ack, respond}) => {
+App.command('/shellpheus-unsubscribe', async ({command, ack, respond}) => {
     await ack();
     const pid = command.text.trim();
 
@@ -87,7 +88,7 @@ setInterval(async () => {
             const msg = `📢 New devlog on project *${pid}*: <https://summer.hackclub.com${latest.slug}|${latest.title}> (${latest.date})`;
             const subs = await Subscription.find({projectId: pid});
             for (const sub of subs) {
-                await app.client.chat.postMessage({channel: sub.channelId, text: msg});
+                await App.client.chat.postMessage({channel: sub.channelId, text: msg});
             }
         }
     }
@@ -95,6 +96,6 @@ setInterval(async () => {
 
 (async () => {
     await initDB();
-    await app.start(process.env.PORT || 3000);
+    await App.start(process.env.PORT || 3000);
     console.log(`⚡ Shellpheus is running on port ${process.env.PORT}`);
 })();
