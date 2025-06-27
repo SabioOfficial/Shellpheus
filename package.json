@@ -1,0 +1,17 @@
+{
+  "name": "shellpheus",
+  "main": "index.js",
+  "scripts": {"start": "node index.js"},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "description": "",
+  "dependencies": {
+    "@slack/bolt": "^4.4.0",
+    "cheerio": "^1.1.0",
+    "dotenv": "^16.6.0",
+    "lowdb": "^7.0.1",
+    "node-fetch": "^3.3.2"
+  }
+}
