@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import pkg from '@slack/bolt';
-const { App } = pkg;
+const { App, ExpressReceiver } = pkg;
 import fetch from 'node-fetch';
 import mongoose from 'mongoose';
 import { Subscription, LastDevlog } from './models.js';
@@ -11,8 +11,14 @@ const cheerio = require('cheerio');
 
 const app = new App({
     token: process.env.SLACK_BOT_TOKEN,
+    receiver,
     signingSecret: process.env.SLACK_SIGNING_SECRET,
     socketMode: false
+});
+
+const receiver = new ExpressReceiver({ 
+    signingSecret: process.env.SLACK_SIGNING_SECRET,
+    endpoints: '/slack/commands'
 });
 
 async function initDB() {
