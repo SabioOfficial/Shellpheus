@@ -7,7 +7,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "description": "",
   "dependencies": {
     "@slack/bolt": "^4.4.0",

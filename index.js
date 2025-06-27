@@ -6,10 +6,6 @@ const mongoose = require('mongoose');
 const {Subscription, LastDevlog} = require('./models');
 const path = require('path');
 
-const file = path.json(__dirname, 'db.json');
-const adapter = new JSONFile(file);
-const db = new Low(adapter);
-
 const app = new App({
     token: process.env.SLACK_BOT_TOKEN,
     signingSecret: process.env.SLACK_SIGNING_SECRET
@@ -53,14 +49,25 @@ app.command('/shellpheus-unsubscribe', async ({command, ack, respond}) => {
 });
 
 async function fetchDevlogs(pid) {
-    const res = await fetch(`https://summer.hackclub.com/projects/${pid}`);
+    const res = await fetch(`https://summer.hackclub.com/projects/${pid}`, {
+        headers: {
+            'Cookie': process.env.SOM_COOKIE,
+            'User-Agent': 'ShellpheusBot/1.0'
+        }
+    });
+
+    if (!res.ok) {
+        console.error(`❌ Failed to fetch project ${pid}: ${res.status}`);
+        return [];
+    }
+
     const html = await res.text();
     const $ = cheerio.load(html);
     return $('.devlog-card').map((i, el) => {
         const slug = $(el).find('a.devlog-link').attr('href');
         const title = $(el).find('h3').text().trim();
         const date = $(el).find('time').attr('datetime');
-        return {slug, title, date};
+        return { slug, title, date };
     }).get();
 }
 

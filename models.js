@@ -7,7 +7,7 @@ const subscriptionSchema = new mongoose.Schema({
 
 const devlogSchema = new mongoose.Schema({
     projectId: {type: String, required: true, unique: true},
-    lastSlug: {type: String, requried: true}
+    lastSlug: {type: String, required: true}
 });
 
 const Subscription = mongoose.model('Subscription', subscriptionSchema);
