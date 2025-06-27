@@ -1,0 +1,36 @@
+_metadata:
+  major_version: 1
+  minor_version: 0
+
+display_information:
+  name: Shellpheus
+  description: from the creators of Client of Making™
+  background_color: "#895b3e"
+
+features:
+  bot_user:
+    display_name: Demo App
+    always_online: false
+  slash_commands:
+    - command: /shellpheus-subscribe
+      url: https://shellpheus.quntem.co.uk/slack/commands
+      description: subscribe ur project to shellpheus
+      usage_hint: project_id
+      should_escape: false
+    - command: /shellpheus-unsubscribe
+      url: https://shellpheus.quntem.co.uk/slack/commands
+      description: unsubscribe from shellpheus' grasp
+      usage_hint: project_id
+      should_escape: false
+
+oauth_config:
+  scopes:
+    bot:
+      - chat:write
+      - commands
+      - app_mentions:read
+
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

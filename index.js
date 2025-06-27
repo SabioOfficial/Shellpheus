@@ -2,7 +2,8 @@ require('dotenv').config();
 const {App} = require('@slack/bolt');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
-const {Low, JSONFile} = require('lowdb');
+const mongoose = require('mongoose');
+const {Subscription, LastDevlog} = require('./models');
 const path = require('path');
 
 const file = path.json(__dirname, 'db.json');
@@ -15,38 +16,37 @@ const app = new App({
 });
 
 async function initDB() {
-    await db.read();
-    db.data ||= {subscriptions: {}, lastDevlogs: {}};
-    await db.write();
+    if (mongoose.connection.readyState === 0) {
+        await mongoose.connect(process.env.MONGO_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        });
+        console.log('✅ MongoDB connected');
+    }
 }
 
 app.command('/shellpheus-subscribe', async ({command, ack, respond}) => {
     await ack();
     const pid = command.text.trim();
     if (!pid) return respond(`Please provide a project ID, e.g. \`/shellpheus-subscribe 2054\`.`);
+
     await initDB();
-    const subs = db.data.subscriptions[pid] || [];
-    if (!subs.includes(command.channel_id)) {
-        subs.push(command.channel_id);
-        db.data.subscriptions[pid] = subs;
-        await db.write();
-        respond(`✅ Subscribed to project ${pid}. I'll let you know when there's a new devlog!`);
-    } else {
-        respond(`You're already subscribed to project ${pid}.`);
+    const exists = await Subscription.findOne({projectId: pid, channelId: command.channel_id});
+    if (exists) {
+        return respond(`You're already subscribed to project ${pid}.`);
     }
+    await Subscription.create({projectId: pid, channelId: command.channel_id});
+    respond(`✅ Subscribed to project ${pid}!`);
 });
 
 app.command('/shellpheus-unsubscribe', async ({command, ack, respond}) => {
     await ack();
     const pid = command.text.trim();
+
     await initDB();
-    const subs = db.data.subscriptions[pid] || [];
-    const idx = subs.indexOf(command.channel_id);
-    if (idx > -1) {
-        subs.splice(idx, 1);
-        db.data.subscriptions[pid] = subs;
-        await db.write();
-        respond(`🗑️ Unsubscribed from project ${pid}.`)
+    const result = await Subscription.deleteOne({projectId: pid, channelId: command.channel_id});
+    if (result.deletedCount) {
+        respond(`🗑️ Unsubscribed from project ${pid}.`);
     } else {
         respond(`You weren't subscribed to project ${pid}.`);
     }
@@ -66,22 +66,32 @@ async function fetchDevlogs(pid) {
 
 setInterval(async () => {
     await initDB();
-    const subs = db.data.subscriptions;
-    for (const pid of Object.keys(subs)) {
+    
+    const projects = await Subscription.distinct('projectId');
+
+    for (const pid of projects) {
         const devlogs = await fetchDevlogs(pid);
-        if (devlogs.length === 0) continue;
+        if (!devlogs.length) continue;
         const latest = devlogs[0];
-        const lastSeen = db.data.lastDevlogs[pid];
-        if (latest.slug !== lastSeen) {
-            db.data.lastDevlogs[pid] = latest.slug;
-            await db.write();
+
+        let record = await LastDevlog.findOne({projectId: pid});
+        if (!record) {
+            record = await LastDevlog.create({projectId: pid, lastSlug: latest.slug});
+            continue;
+        }
+
+        if (record.lastSlug !== latest.slug) {
+            record.lastSlug = latest.slug;
+            await record.save();
+
             const msg = `📢 New devlog on project *${pid}*: <https://summer.hackclub.com${latest.slug}|${latest.title}> (${latest.date})`;
-            for (const channel of subs[pid]) {
-                await app.client.chat.postMessage({channel, text: msg});
+            const subs = await Subscription.find({projectId: pid});
+            for (const sub of subs) {
+                await app.client.chat.postMessage({channel: sub.channelId, text: msg});
             }
         }
     }
-}, parseInt(process.env.CHECK_INTERVAL_MINUTES, 10) * 60 * 1000);
+}, process.env.CHECK_INTERVAL_MINUTES * 60 * 1000);
 
 (async () => {
     await initDB();
