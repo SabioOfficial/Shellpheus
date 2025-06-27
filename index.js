@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import App from '@slack/bolt';
+import { App } from '@slack/bolt';
 import fetch from 'node-fetch';
 import mongoose from 'mongoose';
 import { Subscription, LastDevlog } from './models.js';
@@ -7,6 +7,12 @@ import { Subscription, LastDevlog } from './models.js';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const cheerio = require('cheerio');
+
+const app = new App({
+    token: process.env.SLACK_BOT_TOKEN,
+    signingSecret: process.env.SLACK_SIGNING_SECRET,
+    socketMode: false
+});
 
 async function initDB() {
     if (mongoose.connection.readyState === 0) {
@@ -17,7 +23,7 @@ async function initDB() {
     }
 }
 
-App.command('/shellpheus-subscribe', async ({command, ack, respond}) => {
+app.command('/shellpheus-subscribe', async ({command, ack, respond}) => {
     await ack();
     const pid = command.text.trim();
     if (!pid) return respond(`Please provide a project ID, e.g. \`/shellpheus-subscribe 2054\`.`);
@@ -31,7 +37,7 @@ App.command('/shellpheus-subscribe', async ({command, ack, respond}) => {
     respond(`✅ Subscribed to project ${pid}!`);
 });
 
-App.command('/shellpheus-unsubscribe', async ({command, ack, respond}) => {
+app.command('/shellpheus-unsubscribe', async ({command, ack, respond}) => {
     await ack();
     const pid = command.text.trim();
 
@@ -90,7 +96,7 @@ setInterval(async () => {
             const msg = `📢 New devlog on project *${pid}*: <https://summer.hackclub.com${latest.slug}|${latest.title}> (${latest.date})`;
             const subs = await Subscription.find({projectId: pid});
             for (const sub of subs) {
-                await App.client.chat.postMessage({channel: sub.channelId, text: msg});
+                await app.client.chat.postMessage({channel: sub.channelId, text: msg});
             }
         }
     }
@@ -98,6 +104,6 @@ setInterval(async () => {
 
 (async () => {
     await initDB();
-    await App.start(process.env.PORT || 3000);
+    await app.start(process.env.PORT || 3000);
     console.log(`⚡ Shellpheus is running on port ${process.env.PORT}`);
 })();
