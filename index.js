@@ -26,18 +26,37 @@ async function initDB() {
     }
 }
 
-app.command('/shellpheus-subscribe', async ({command, ack, respond}) => {
+app.command('/shellpheus-subscribe', async ({ command, ack, respond }) => {
     await ack();
-    const pid = command.text.trim();
-    if (!pid) return respond(`Please provide a project ID, e.g. \`/shellpheus-subscribe 2054\`.`);
 
-    await initDB();
-    const exists = await Subscription.findOne({projectId: pid, channelId: command.channel_id});
-    if (exists) {
-        return respond(`You're already subscribed to project ${pid}.`);
+    const pid = command.text.trim();
+    if (!pid) {
+        await respond('Please provide a project ID, e.g. `/shellpheus-subscribe 2054`.');
+        return;
     }
-    await Subscription.create({projectId: pid, channelId: command.channel_id});
-    respond(`✅ Subscribed to project ${pid}!`);
+
+    try {
+        await initDB();
+        const exists = await Subscription.findOne({ projectId: pid, channelId: command.channel_id });
+        if (exists) {
+            await respond(`You're already subscribed to project ${pid}.`);
+            return;
+        }
+        await Subscription.create({ projectId: pid, channelId: command.channel_id });
+        await respond(`✅ Subscribed to project ${pid}!`);
+
+        const devlogs = await fetchDevlogs(pid);
+        if (devlogs.length) {
+            const latest = devlogs[0];
+            await app.client.chat.postMessage({
+                channel: command.channel_id,
+                text: `📢 Latest devlog for project *${pid}*: <https://summer.hackclub.com${latest.slug}|${latest.title}> (${latest.date})`
+            });
+        }
+    } catch (err) {
+        await respond("❌ An error occurred while subscribing.");
+        console.error(err);
+    }
 });
 
 app.command('/shellpheus-unsubscribe', async ({command, ack, respond}) => {
